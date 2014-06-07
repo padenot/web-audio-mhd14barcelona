@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html prefix="bibo: http://purl.org/ontology/bibo/ w3p: http://www.w3.org/2001/02pd/rec54#" content="en" property="dcterms:language" about="" typeof="bibo:Document w3p:WD" dir="ltr" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Web Audio API</title>
+  <meta charset="utf-8">
+  
+  
+  <script>
+    function findBadLink () {
+      var old = document.querySelectorAll(".badLink");
+      for (var i = 0 ; i < old.length; i++) {
+        nodes[i].style.backgroundColor = "";
+        nodes[i].classList.remove("badLink");
+      }
+      var nodes = document.querySelectorAll('a');
+
+      for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].href) {
+              var id =  nodes[i].href.split("/");
+              id = id[id.length - 1];
+              if (id.length != 0) {
+                  if (id[0] == "#") {
+                      if (document.querySelectorAll(id).length == 0) {
+                        nodes[i].style.backgroundColor = "red";
+                        nodes[i].classList.add("badLink");
+                        console.log(nodes[i].textContent);
+                    }
+                 }
+              }
+          } else {
+            nodes[i].style.backgroundColor = "red";
+            nodes[i].classList.add("badLink");
+          }
+      }
+    }
+
+    function findMissingLink() {
+      var codetags = document.querySelectorAll("code");
+
+      for (var i = 0; i < codetags.length; i++) {
+        if (!(codetags[i].parentNode instanceof HTMLAnchorElement) ||
+            codetags[i].parentNode.href == "") {
+          codetags[i].style.backgroundColor = 'hotpink';
+          codetags[i].style.color  = 'yellow';
+
+          console.log(codetags[i].innerHTML);
+        }
+      }
+    }
+  </script>
+<style>/*****************************************************************
+ * ReSpec 3 CSS
+ * Robin Berjon - http://berjon.com/
+ *****************************************************************/
+
+/* --- INLINES --- */
+em.rfc2119 { 
+    text-transform:     lowercase;
+    font-variant:       small-caps;
+    font-style:         normal;
+    color:              #900;
+}
+
+h1 acronym, h2 acronym, h3 acronym, h4 acronym, h5 acronym, h6 acronym, a acronym,
+h1 abbr, h2 abbr, h3 abbr, h4 abbr, h5 abbr, h6 abbr, a abbr {
+    border: none;
+}
+
+dfn {
+    font-weight:    bold;
+}
+
+a.internalDFN {
+    color:  inherit;
+    border-bottom:  1px solid #99c;
+    text-decoration:    none;
+}
+
+a.externalDFN {
+    color:  inherit;
+    border-bottom:  1px dotted #ccc;
+    text-decoration:    none;
+}
+
+a.bibref {
+    text-decoration:    none;
+}
+
+cite .bibref {
+    font-style: normal;
+}
+
+code {
+    color:  #ff4500;
+}
+
+/* --- TOC --- */
+.toc a, .tof a {
+    text-decoration:    none;
+}
+
+a .secno, a .figno {
+    color:  #000;
+}
+
+ul.tof, ol.tof {
+    list-style: none outside none;
+}
+
+.caption {
+    margin-top: 0.5em;
+    font-style:   italic;
+}
+
+/* --- TABLE --- */
+table.simple {
+    border-spacing: 0;
+    border-collapse:    collapse;
+    border-bottom:  3px solid #005a9c;
+}
+
+.simple th {
+    background: #005a9c;
+    color:  #fff;
+    padding:    3px 5px;
+    text-align: left;
+}
+
+.simple th[scope="row"] {
+    background: inherit;
+    color:  inherit;
+    border-top: 1px solid #ddd;
+}
+
+.simple td {
+    padding:    3px 10px;
+    border-top: 1px solid #ddd;
+}
+
+.simple tr:nth-child(even) {
+    background: #f0f6ff;
+}
+
+/* --- DL --- */
+.section dd > p:first-child {
+    margin-top: 0;
+}
+
+.section dd > p:last-child {
+    margin-bottom: 0;
+}
+
+.section dd {
+    margin-bottom:  1em;
+}
+
+.section dl.attrs dd, .section dl.eldef dd {
+    margin-bottom:  0;
+}
+
+@media print {
+    .removeOnSave {
+        display: none;
+    }
+}
+</style><style>/* --- EXAMPLES --- */
+div.example-title {
+    min-width: 7.5em;
+    color: #b9ab2d;
+}
+div.example-title span {
+    text-transform: uppercase;   
+}
+aside.example, div.example, div.illegal-example {
+    padding: 0.5em;
+    margin: 1em 0;
+    position: relative;
+    clear: both;
+}
+div.illegal-example { color: red }
+div.illegal-example p { color: black }
+aside.example, div.example {
+    padding: .5em;
+    border-left-width: .5em;
+    border-left-style: solid;
+    border-color: #e0cb52;
+    background: #fcfaee;    
+}
+
+aside.example div.example {
+    border-left-width: .1em;
+    border-color: #999;
+    background: #fff;
+}
+aside.example div.example div.example-title {
+    color: #999;
+}
+</style><style>/* --- ISSUES/NOTES --- */
+div.issue-title, div.note-title {
+    padding-right:  1em;
+    min-width: 7.5em;
+    color: #b9ab2d;
+}
+div.issue-title { color: #e05252; }
+div.note-title { color: #2b2; }
+div.issue-title span, div.note-title span {
+    text-transform: uppercase;
+}
+div.note, div.issue {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+.note > p:first-child, .issue > p:first-child { margin-top: 0 }
+.issue, .note {
+    padding: .5em;
+    border-left-width: .5em;
+    border-left-style: solid;
+}
+div.issue, div.note {
+    padding: 1em 1.2em 0.5em;
+    margin: 1em 0;
+    position: relative;
+    clear: both;
+}
+span.note, span.issue { padding: .1em .5em .15em; }
+
+.issue {
+    border-color: #e05252;
+    background: #fbe9e9;
+}
+.note {
+    border-color: #52e052;
+    background: #e9fbe9;
+}
+
+
+</style><style>/* HIGHLIGHTS */
+code.prettyprint {
+    color:  inherit;
+}
+
+/* this from google-code-prettify */
+.pln{color:#000}@media screen{.str{color:#080}.kwd{color:#008}.com{color:#800}.typ{color:#606}.lit{color:#066}.pun,.opn,.clo{color:#660}.tag{color:#008}.atn{color:#606}.atv{color:#080}.dec,.var{color:#606}.fun{color:red}}@media print,projection{.str{color:#060}.kwd{color:#006;font-weight:bold}.com{color:#600;font-style:italic}.typ{color:#404;font-weight:bold}.lit{color:#044}.pun,.opn,.clo{color:#440}.tag{color:#006;font-weight:bold}.atn{color:#404}.atv{color:#060}}ol.linenums{margin-top:0;margin-bottom:0}li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8{list-style-type:none}li.L1,li.L3,li.L5,li.L7,li.L9{background:#eee}
+</style><style>/* --- WEB IDL --- */
+pre.idl {
+    border-top: 1px solid #90b8de;
+    border-bottom: 1px solid #90b8de;
+    padding:    1em;
+    line-height:    120%;
+}
+
+pre.idl::before {
+    content:    "WebIDL";
+    display:    block;
+    width:      150px;
+    background: #90b8de;
+    color:  #fff;
+    font-family:    initial;
+    padding:    3px;
+    font-weight:    bold;
+    margin: -1em 0 1em -1em;
+}
+
+.idlType {
+    color:  #ff4500;
+    font-weight:    bold;
+    text-decoration:    none;
+}
+
+/*.idlModule*/
+/*.idlModuleID*/
+/*.idlInterface*/
+.idlInterfaceID, .idlDictionaryID, .idlCallbackID, .idlEnumID {
+    font-weight:    bold;
+    color:  #005a9c;
+}
+a.idlEnumItem {
+    color:  #000;
+    border-bottom:  1px dotted #ccc;
+    text-decoration: none;
+}
+
+.idlSuperclass {
+    font-style: italic;
+    color:  #005a9c;
+}
+
+/*.idlAttribute*/
+.idlAttrType, .idlFieldType, .idlMemberType {
+    color:  #005a9c;
+}
+.idlAttrName, .idlFieldName, .idlMemberName {
+    color:  #ff4500;
+}
+.idlAttrName a, .idlFieldName a, .idlMemberName a {
+    color:  #ff4500;
+    border-bottom:  1px dotted #ff4500;
+    text-decoration: none;
+}
+
+/*.idlMethod*/
+.idlMethType, .idlCallbackType {
+    color:  #005a9c;
+}
+.idlMethName {
+    color:  #ff4500;
+}
+.idlMethName a {
+    color:  #ff4500;
+    border-bottom:  1px dotted #ff4500;
+    text-decoration: none;
+}
+
+/*.idlCtor*/
+.idlCtorName {
+    color:  #ff4500;
+}
+.idlCtorName a {
+    color:  #ff4500;
+    border-bottom:  1px dotted #ff4500;
+    text-decoration: none;
+}
+
+/*.idlParam*/
+.idlParamType {
+    color:  #005a9c;
+}
+.idlParamName, .idlDefaultValue {
+    font-style: italic;
+}
+
+.extAttr {
+    color:  #666;
+}
+
+/*.idlSectionComment*/
+.idlSectionComment {
+    color: gray;
+}
+
+/*.idlConst*/
+.idlConstType {
+    color:  #005a9c;
+}
+.idlConstName {
+    color:  #ff4500;
+}
+.idlConstName a {
+    color:  #ff4500;
+    border-bottom:  1px dotted #ff4500;
+    text-decoration: none;
+}
+
+/*.idlException*/
+.idlExceptionID {
+    font-weight:    bold;
+    color:  #c00;
+}
+
+.idlTypedefID, .idlTypedefType {
+    color:  #005a9c;
+}
+
+.idlRaises, .idlRaises a.idlType, .idlRaises a.idlType code, .excName a, .excName a code {
+    color:  #c00;
+    font-weight:    normal;
+}
+
+.excName a {
+    font-family:    monospace;
+}
+
+.idlRaises a.idlType, .excName a.idlType {
+    border-bottom:  1px dotted #c00;
+}
+
+.excGetSetTrue, .excGetSetFalse, .prmNullTrue, .prmNullFalse, .prmOptTrue, .prmOptFalse {
+    width:  45px;
+    text-align: center;
+}
+.excGetSetTrue, .prmNullTrue, .prmOptTrue { color:  #0c0; }
+.excGetSetFalse, .prmNullFalse, .prmOptFalse { color:  #c00; }
+
+.idlImplements a {
+    font-weight:    bold;
+}
+
+dl.attributes, dl.methods, dl.constants, dl.constructors, dl.fields, dl.dictionary-members {
+    margin-left:    2em;
+}
+
+.attributes dt, .methods dt, .constants dt, .constructors dt, .fields dt, .dictionary-members dt {
+    font-weight:    normal;
+}
+
+.attributes dt code, .methods dt code, .constants dt code, .constructors dt code, .fields dt code, .dictionary-members dt code {
+    font-weight:    bold;
+    color:  #000;
+    font-family:    monospace;
+}
+
+.attributes dt code, .fields dt code, .dictionary-members dt code {
+    background:  #ffffd2;
+}
+
+.attributes dt .idlAttrType code, .fields dt .idlFieldType code, .dictionary-members dt .idlMemberType code {
+    color:  #005a9c;
+    background:  transparent;
+    font-family:    inherit;
+    font-weight:    normal;
+    font-style: italic;
+}
+
+.methods dt code {
+    background:  #d9e6f8;
+}
+
+.constants dt code {
+    background:  #ddffd2;
+}
+
+.constructors dt code {
+    background:  #cfc;
+}
+
+.attributes dd, .methods dd, .constants dd, .constructors dd, .fields dd, .dictionary-members dd {
+    margin-bottom:  1em;
+}
+
+table.parameters, table.exceptions {
+    border-spacing: 0;
+    border-collapse:    collapse;
+    margin: 0.5em 0;
+    width:  100%;
+}
+table.parameters { border-bottom:  1px solid #90b8de; }
+table.exceptions { border-bottom:  1px solid #deb890; }
+
+.parameters th, .exceptions th {
+    color:  #fff;
+    padding:    3px 5px;
+    text-align: left;
+    font-family:    initial;
+    font-weight:    normal;
+    text-shadow:    #666 1px 1px 0;
+}
+.parameters th { background: #90b8de; }
+.exceptions th { background: #deb890; }
+
+.parameters td, .exceptions td {
+    padding:    3px 10px;
+    border-top: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.parameters tr:first-child td, .exceptions tr:first-child td {
+    border-top: none;
+}
+
+.parameters td.prmName, .exceptions td.excName, .exceptions td.excCodeName {
+    width:  100px;
+}
+
+.parameters td.prmType {
+    width:  120px;
+}
+
+table.exceptions table {
+    border-spacing: 0;
+    border-collapse:    collapse;
+    width:  100%;
+}
+</style><link href="web-audio-api-cheatsheet_files/W3C-WD.css" rel="stylesheet"><!--[if lt IE 9]><script src='https://www.w3.org/2008/site/js/html5shiv.js'></script><![endif]--><!-- base href="http://webaudio.github.io/web-audio-api/" --></head>
+
+<body id="respecDocument" role="document" class="h-entry"><h1 class=".lalala123123">Web Audio API cheat sheet</h1>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="lalala123123"><pre class="idl"><span class="idlInterface" id="idl-def-AudioContext"><span class="idlCallback" id="idl-def-DecodeErrorCallback">callback <span class="idlCallbackID">DecodeErrorCallback</span> = <span class="idlCallbackType">void</span> (<span class="idlParam"><span class="idlParamType">DOMException</span> <span class="idlParamName">error</span></span>);</span><br><br><span class="idlCallback" id="idl-def-DecodeSuccessCallback">callback <span class="idlCallbackID">DecodeSuccessCallback</span> = <span class="idlCallbackType">void</span> (<span class="idlParam"><span class="idlParamType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a></span> <span class="idlParamName">decodedData</span></span>);</span><br><br>[<span class="extAttr">Constructor</span>]
+interface <span class="idlInterfaceID">AudioContext</span> : <span class="idlSuperclass">EventTarget</span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioDestinationNode"><code>AudioDestinationNode</code></a></span> <span class="idlAttrName"><a href="#widl-AudioContext-destination">destination</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">float</span>                <span class="idlAttrName"><a href="#widl-AudioContext-sampleRate">sampleRate</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">double</span>               <span class="idlAttrName"><a href="#widl-AudioContext-currentTime">currentTime</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioListener"><code>AudioListener</code></a></span>        <span class="idlAttrName"><a href="#widl-AudioContext-listener">listener</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a></span>                     <span class="idlMethName"><a href="#widl-AudioContext-createBuffer-AudioBuffer-unsigned-long-numberOfChannels-unsigned-long-length-float-sampleRate">createBuffer</a></span> (<span class="idlParam"><span class="idlParamType">unsigned long</span> <span class="idlParamName">numberOfChannels</span></span>, <span class="idlParam"><span class="idlParamType">unsigned long</span> <span class="idlParamName">length</span></span>, <span class="idlParam"><span class="idlParamType">float</span> <span class="idlParamName">sampleRate</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">Promise&lt;<a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a>&gt;</span>            <span class="idlMethName"><a href="#widl-AudioContext-decodeAudioData-Promise-AudioBuffer--ArrayBuffer-audioData-DecodeSuccessCallback-successCallback-DecodeErrorCallback-errorCallback">decodeAudioData</a></span> (<span class="idlParam"><span class="idlParamType">ArrayBuffer</span> <span class="idlParamName">audioData</span></span>, <span class="idlParam">optional <span class="idlParamType"><a class="idlType" href="#idl-def-DecodeSuccessCallback"><code>DecodeSuccessCallback</code></a></span> <span class="idlParamName">successCallback</span></span>, <span class="idlParam">optional <span class="idlParamType"><a class="idlType" href="#idl-def-DecodeErrorCallback"><code>DecodeErrorCallback</code></a></span> <span class="idlParamName">errorCallback</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-AudioBufferSourceNode"><code>AudioBufferSourceNode</code></a></span>           <span class="idlMethName"><a href="#widl-AudioContext-createBufferSource-AudioBufferSourceNode">createBufferSource</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-MediaElementAudioSourceNode"><code>MediaElementAudioSourceNode</code></a></span>     <span class="idlMethName"><a href="#widl-AudioContext-createMediaElementSource-MediaElementAudioSourceNode-HTMLMediaElement-mediaElement">createMediaElementSource</a></span> (<span class="idlParam"><span class="idlParamType">HTMLMediaElement</span> <span class="idlParamName">mediaElement</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-MediaStreamAudioSourceNode"><code>MediaStreamAudioSourceNode</code></a></span>      <span class="idlMethName"><a href="#widl-AudioContext-createMediaStreamSource-MediaStreamAudioSourceNode-MediaStream-mediaStream">createMediaStreamSource</a></span> (<span class="idlParam"><span class="idlParamType">MediaStream</span> <span class="idlParamName">mediaStream</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-MediaStreamAudioDestinationNode"><code>MediaStreamAudioDestinationNode</code></a></span> <span class="idlMethName"><a href="#widl-AudioContext-createMediaStreamDestination-MediaStreamAudioDestinationNode">createMediaStreamDestination</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-ScriptProcessorNode"><code>ScriptProcessorNode</code></a></span>             <span class="idlMethName"><a href="#widl-AudioContext-createScriptProcessor-ScriptProcessorNode-unsigned-long-bufferSize-unsigned-long-numberOfInputChannels-unsigned-long-numberOfOutputChannels">createScriptProcessor</a></span> (<span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">bufferSize</span> = <span class="idlDefaultValue">0 </span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">numberOfInputChannels</span> = <span class="idlDefaultValue">2 </span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">numberOfOutputChannels</span> = <span class="idlDefaultValue">2 </span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-AnalyserNode"><code>AnalyserNode</code></a></span>                    <span class="idlMethName"><a href="#widl-AudioContext-createAnalyser-AnalyserNode">createAnalyser</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-GainNode"><code>GainNode</code></a></span>                        <span class="idlMethName"><a href="#widl-AudioContext-createGain-GainNode">createGain</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-DelayNode"><code>DelayNode</code></a></span>                       <span class="idlMethName"><a href="#widl-AudioContext-createDelay-DelayNode-double-maxDelayTime">createDelay</a></span> (<span class="idlParam">optional <span class="idlParamType">double</span> <span class="idlParamName">maxDelayTime</span> = <span class="idlDefaultValue">1.0 </span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-BiquadFilterNode"><code>BiquadFilterNode</code></a></span>                <span class="idlMethName"><a href="#widl-AudioContext-createBiquadFilter-BiquadFilterNode">createBiquadFilter</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-WaveShaperNode"><code>WaveShaperNode</code></a></span>                  <span class="idlMethName"><a href="#widl-AudioContext-createWaveShaper-WaveShaperNode">createWaveShaper</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-PannerNode"><code>PannerNode</code></a></span>                      <span class="idlMethName"><a href="#widl-AudioContext-createPanner-PannerNode">createPanner</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-ConvolverNode"><code>ConvolverNode</code></a></span>                   <span class="idlMethName"><a href="#widl-AudioContext-createConvolver-ConvolverNode">createConvolver</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-ChannelSplitterNode"><code>ChannelSplitterNode</code></a></span>             <span class="idlMethName"><a href="#widl-AudioContext-createChannelSplitter-ChannelSplitterNode-unsigned-long-numberOfOutputs">createChannelSplitter</a></span> (<span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">numberOfOutputs</span> = <span class="idlDefaultValue">6 </span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-ChannelMergerNode"><code>ChannelMergerNode</code></a></span>               <span class="idlMethName"><a href="#widl-AudioContext-createChannelMerger-ChannelMergerNode-unsigned-long-numberOfInputs">createChannelMerger</a></span> (<span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">numberOfInputs</span> = <span class="idlDefaultValue">6 </span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-DynamicsCompressorNode"><code>DynamicsCompressorNode</code></a></span>          <span class="idlMethName"><a href="#widl-AudioContext-createDynamicsCompressor-DynamicsCompressorNode">createDynamicsCompressor</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-OscillatorNode"><code>OscillatorNode</code></a></span>                  <span class="idlMethName"><a href="#widl-AudioContext-createOscillator-OscillatorNode">createOscillator</a></span> ();</span>
+<span class="idlMethod">    <span class="idlMethType"><a class="idlType" href="#idl-def-PeriodicWave"><code>PeriodicWave</code></a></span>                    <span class="idlMethName"><a href="#widl-AudioContext-createPeriodicWave-PeriodicWave-Float32Array-real-Float32Array-imag">createPeriodicWave</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">real</span></span>, <span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">imag</span></span>);</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-OfflineAudioContext">[<span class="extAttr">Constructor(unsigned long numberOfChannels, unsigned long length, float sampleRate)</span>]
+interface <span class="idlInterfaceID">OfflineAudioContext</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioContext"><code>AudioContext</code></a></span> {
+<span class="idlMethod">    <span class="idlMethType">Promise&lt;<a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a>&gt;</span> <span class="idlMethName"><a href="#widl-OfflineAudioContext-startRendering-Promise-AudioBuffer">startRendering</a></span> ();</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">EventHandler</span> <span class="idlAttrName"><a href="#widl-OfflineAudioContext-oncomplete">oncomplete</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-OfflineAudioCompletionEvent">interface <span class="idlInterfaceID">OfflineAudioCompletionEvent</span> : <span class="idlSuperclass">Event</span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a></span> <span class="idlAttrName"><a href="#widl-OfflineAudioCompletionEvent-renderedBuffer">renderedBuffer</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlEnum" id="idl-def-ChannelCountMode">enum <span class="idlEnumID">ChannelCountMode</span> {
+    "<a href="#idl-def-ChannelCountMode.max" class="idlEnumItem">max</a>",
+    "<a href="#idl-def-ChannelCountMode.clamped-max" class="idlEnumItem">clamped-max</a>",
+    "<a href="#idl-def-ChannelCountMode.explicit" class="idlEnumItem">explicit</a>"
+};</span></pre><pre class="idl"><span class="idlEnum" id="idl-def-ChannelInterpretation">enum <span class="idlEnumID">ChannelInterpretation</span> {
+    "<a href="#idl-def-ChannelInterpretation.speakers" class="idlEnumItem">speakers</a>",
+    "<a href="#idl-def-ChannelInterpretation.discrete" class="idlEnumItem">discrete</a>"
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioNode">interface <span class="idlInterfaceID">AudioNode</span> : <span class="idlSuperclass">EventTarget</span> {
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioNode-connect-void-AudioNode-destination-unsigned-long-output-unsigned-long-input">connect</a></span> (<span class="idlParam"><span class="idlParamType"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> <span class="idlParamName">destination</span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">output</span> = <span class="idlDefaultValue">0 </span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">input</span> = <span class="idlDefaultValue">0</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioNode-connect-void-AudioParam-destination-unsigned-long-output">connect</a></span> (<span class="idlParam"><span class="idlParamType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlParamName">destination</span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">output</span> = <span class="idlDefaultValue">0 </span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioNode-disconnect-void">disconnect</a></span> ();</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioContext"><code>AudioContext</code></a></span>          <span class="idlAttrName"><a href="#widl-AudioNode-context">context</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">unsigned long</span>         <span class="idlAttrName"><a href="#widl-AudioNode-numberOfInputs">numberOfInputs</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">unsigned long</span>         <span class="idlAttrName"><a href="#widl-AudioNode-numberOfOutputs">numberOfOutputs</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">unsigned long</span>         <span class="idlAttrName"><a href="#widl-AudioNode-channelCount">channelCount</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-ChannelCountMode"><code>ChannelCountMode</code></a></span>      <span class="idlAttrName"><a href="#widl-AudioNode-channelCountMode">channelCountMode</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-ChannelInterpretation"><code>ChannelInterpretation</code></a></span> <span class="idlAttrName"><a href="#widl-AudioNode-channelInterpretation">channelInterpretation</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioDestinationNode">interface <span class="idlInterfaceID">AudioDestinationNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">unsigned long</span> <span class="idlAttrName"><a href="#widl-AudioDestinationNode-maxChannelCount">maxChannelCount</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioParam">interface <span class="idlInterfaceID">AudioParam</span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType">float</span> <span class="idlAttrName"><a href="#widl-AudioParam-value">value</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">float</span> <span class="idlAttrName"><a href="#widl-AudioParam-defaultValue">defaultValue</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioParam-setValueAtTime-void-float-value-double-startTime">setValueAtTime</a></span> (<span class="idlParam"><span class="idlParamType">float</span> <span class="idlParamName">value</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">startTime</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioParam-linearRampToValueAtTime-void-float-value-double-endTime">linearRampToValueAtTime</a></span> (<span class="idlParam"><span class="idlParamType">float</span> <span class="idlParamName">value</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">endTime</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioParam-exponentialRampToValueAtTime-void-float-value-double-endTime">exponentialRampToValueAtTime</a></span> (<span class="idlParam"><span class="idlParamType">float</span> <span class="idlParamName">value</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">endTime</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioParam-setTargetAtTime-void-float-target-double-startTime-double-timeConstant">setTargetAtTime</a></span> (<span class="idlParam"><span class="idlParamType">float</span> <span class="idlParamName">target</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">startTime</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">timeConstant</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioParam-setValueCurveAtTime-void-Float32Array-values-double-startTime-double-duration">setValueCurveAtTime</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">values</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">startTime</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">duration</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioParam-cancelScheduledValues-void-double-startTime">cancelScheduledValues</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">startTime</span></span>);</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-GainNode">interface <span class="idlInterfaceID">GainNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-GainNode-gain">gain</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-DelayNode">interface <span class="idlInterfaceID">DelayNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DelayNode-delayTime">delayTime</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioBuffer">interface <span class="idlInterfaceID">AudioBuffer</span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">float</span>  <span class="idlAttrName"><a href="#widl-AudioBuffer-sampleRate">sampleRate</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">long</span>   <span class="idlAttrName"><a href="#widl-AudioBuffer-length">length</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">double</span> <span class="idlAttrName"><a href="#widl-AudioBuffer-duration">duration</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">long</span>   <span class="idlAttrName"><a href="#widl-AudioBuffer-numberOfChannels">numberOfChannels</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">Float32Array</span> <span class="idlMethName"><a href="#widl-AudioBuffer-getChannelData-Float32Array-unsigned-long-channel">getChannelData</a></span> (<span class="idlParam"><span class="idlParamType">unsigned long</span> <span class="idlParamName">channel</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span>         <span class="idlMethName"><a href="#widl-AudioBuffer-copyFromChannel-void-Float32Array-destination-long-channelNumber-unsigned-long-startInChannel">copyFromChannel</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">destination</span></span>, <span class="idlParam"><span class="idlParamType">long</span> <span class="idlParamName">channelNumber</span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">startInChannel</span> = <span class="idlDefaultValue">0</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span>         <span class="idlMethName"><a href="#widl-AudioBuffer-copyToChannel-void-Float32Array-source-long-channelNumber-unsigned-long-startInChannel">copyToChannel</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">source</span></span>, <span class="idlParam"><span class="idlParamType">long</span> <span class="idlParamName">channelNumber</span></span>, <span class="idlParam">optional <span class="idlParamType">unsigned long</span> <span class="idlParamName">startInChannel</span> = <span class="idlDefaultValue">0</span></span>);</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioBufferSourceNode">interface <span class="idlInterfaceID">AudioBufferSourceNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a>?</span> <span class="idlAttrName"><a href="#widl-AudioBufferSourceNode-buffer">buffer</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>   <span class="idlAttrName"><a href="#widl-AudioBufferSourceNode-playbackRate">playbackRate</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">boolean</span>      <span class="idlAttrName"><a href="#widl-AudioBufferSourceNode-loop">loop</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>       <span class="idlAttrName"><a href="#widl-AudioBufferSourceNode-loopStart">loopStart</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>       <span class="idlAttrName"><a href="#widl-AudioBufferSourceNode-loopEnd">loopEnd</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioBufferSourceNode-start-void-double-when-double-offset-double-duration">start</a></span> (<span class="idlParam">optional <span class="idlParamType">double</span> <span class="idlParamName">when</span> = <span class="idlDefaultValue">0</span></span>, <span class="idlParam">optional <span class="idlParamType">double</span> <span class="idlParamName">offset</span> = <span class="idlDefaultValue">0</span></span>, <span class="idlParam">optional <span class="idlParamType">double</span> <span class="idlParamName">duration</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioBufferSourceNode-stop-void-double-when">stop</a></span> (<span class="idlParam">optional <span class="idlParamType">double</span> <span class="idlParamName">when</span> = <span class="idlDefaultValue">0</span></span>);</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">EventHandler</span> <span class="idlAttrName"><a href="#widl-AudioBufferSourceNode-onended">onended</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-MediaElementAudioSourceNode">interface <span class="idlInterfaceID">MediaElementAudioSourceNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-ScriptProcessorNode">interface <span class="idlInterfaceID">ScriptProcessorNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType">EventHandler</span> <span class="idlAttrName"><a href="#widl-ScriptProcessorNode-onaudioprocess">onaudioprocess</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">long</span>         <span class="idlAttrName"><a href="#widl-ScriptProcessorNode-bufferSize">bufferSize</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioProcessingEvent">interface <span class="idlInterfaceID">AudioProcessingEvent</span> : <span class="idlSuperclass">Event</span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">double</span>      <span class="idlAttrName"><a href="#widl-AudioProcessingEvent-playbackTime">playbackTime</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a></span> <span class="idlAttrName"><a href="#widl-AudioProcessingEvent-inputBuffer">inputBuffer</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a></span> <span class="idlAttrName"><a href="#widl-AudioProcessingEvent-outputBuffer">outputBuffer</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlEnum" id="idl-def-PanningModelType">enum <span class="idlEnumID">PanningModelType</span> {
+    "<a href="#idl-def-PanningModelType.equalpower" class="idlEnumItem">equalpower</a>",
+    "<a href="#idl-def-PanningModelType.xHRTF" class="idlEnumItem">HRTF</a>"
+};</span></pre><pre class="idl"><span class="idlEnum" id="idl-def-DistanceModelType">enum <span class="idlEnumID">DistanceModelType</span> {
+    "<a href="#idl-def-DistanceModelType.linear" class="idlEnumItem">linear</a>",
+    "<a href="#idl-def-DistanceModelType.inverse" class="idlEnumItem">inverse</a>",
+    "<a href="#idl-def-DistanceModelType.exponential" class="idlEnumItem">exponential</a>"
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-PannerNode">interface <span class="idlInterfaceID">PannerNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-PanningModelType"><code>PanningModelType</code></a></span>  <span class="idlAttrName"><a href="#widl-PannerNode-panningModel">panningModel</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-PannerNode-setPosition-void-double-x-double-y-double-z">setPosition</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">x</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">y</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">z</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-PannerNode-setOrientation-void-double-x-double-y-double-z">setOrientation</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">x</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">y</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">z</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-PannerNode-setVelocity-void-double-x-double-y-double-z">setVelocity</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">x</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">y</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">z</span></span>);</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-DistanceModelType"><code>DistanceModelType</code></a></span> <span class="idlAttrName"><a href="#widl-PannerNode-distanceModel">distanceModel</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>            <span class="idlAttrName"><a href="#widl-PannerNode-refDistance">refDistance</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>            <span class="idlAttrName"><a href="#widl-PannerNode-maxDistance">maxDistance</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>            <span class="idlAttrName"><a href="#widl-PannerNode-rolloffFactor">rolloffFactor</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>            <span class="idlAttrName"><a href="#widl-PannerNode-coneInnerAngle">coneInnerAngle</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>            <span class="idlAttrName"><a href="#widl-PannerNode-coneOuterAngle">coneOuterAngle</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>            <span class="idlAttrName"><a href="#widl-PannerNode-coneOuterGain">coneOuterGain</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AudioListener">interface <span class="idlInterfaceID">AudioListener</span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span> <span class="idlAttrName"><a href="#widl-AudioListener-dopplerFactor">dopplerFactor</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span> <span class="idlAttrName"><a href="#widl-AudioListener-speedOfSound">speedOfSound</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioListener-setPosition-void-double-x-double-y-double-z">setPosition</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">x</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">y</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">z</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AudioListener-setOrientation-void-double-x-double-y-double-z-double-xUp-double-yUp-double-zUp">setOrientation</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">x</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">y</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">z</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">xUp</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">yUp</span></span>, <span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">zUp</span></span>);</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-ConvolverNode">interface <span class="idlInterfaceID">ConvolverNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioBuffer"><code>AudioBuffer</code></a>?</span> <span class="idlAttrName"><a href="#widl-ConvolverNode-buffer">buffer</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">boolean</span>      <span class="idlAttrName"><a href="#widl-ConvolverNode-normalize">normalize</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-AnalyserNode">interface <span class="idlInterfaceID">AnalyserNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AnalyserNode-getFloatFrequencyData-void-Float32Array-array">getFloatFrequencyData</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">array</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AnalyserNode-getByteFrequencyData-void-Uint8Array-array">getByteFrequencyData</a></span> (<span class="idlParam"><span class="idlParamType">Uint8Array</span> <span class="idlParamName">array</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AnalyserNode-getFloatTimeDomainData-void-Float32Array-array">getFloatTimeDomainData</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">array</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-AnalyserNode-getByteTimeDomainData-void-Uint8Array-array">getByteTimeDomainData</a></span> (<span class="idlParam"><span class="idlParamType">Uint8Array</span> <span class="idlParamName">array</span></span>);</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">unsigned long</span> <span class="idlAttrName"><a href="#widl-AnalyserNode-fftSize">fftSize</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">unsigned long</span> <span class="idlAttrName"><a href="#widl-AnalyserNode-frequencyBinCount">frequencyBinCount</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>        <span class="idlAttrName"><a href="#widl-AnalyserNode-minDecibels">minDecibels</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>        <span class="idlAttrName"><a href="#widl-AnalyserNode-maxDecibels">maxDecibels</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">double</span>        <span class="idlAttrName"><a href="#widl-AnalyserNode-smoothingTimeConstant">smoothingTimeConstant</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-ChannelSplitterNode">interface <span class="idlInterfaceID">ChannelSplitterNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-ChannelMergerNode">interface <span class="idlInterfaceID">ChannelMergerNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-DynamicsCompressorNode">interface <span class="idlInterfaceID">DynamicsCompressorNode</span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DynamicsCompressorNode-threshold">threshold</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DynamicsCompressorNode-knee">knee</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DynamicsCompressorNode-ratio">ratio</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DynamicsCompressorNode-reduction">reduction</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DynamicsCompressorNode-attack">attack</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span> <span class="idlAttrName"><a href="#widl-DynamicsCompressorNode-release">release</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlEnum" id="idl-def-BiquadFilterType">enum <span class="idlEnumID">BiquadFilterType</span> {
+    "<a href="#idl-def-BiquadFilterType.lowpass" class="idlEnumItem">lowpass</a>",
+    "<a href="#idl-def-BiquadFilterType.highpass" class="idlEnumItem">highpass</a>",
+    "<a href="#idl-def-BiquadFilterType.bandpass" class="idlEnumItem">bandpass</a>",
+    "<a href="#idl-def-BiquadFilterType.lowshelf" class="idlEnumItem">lowshelf</a>",
+    "<a href="#idl-def-BiquadFilterType.highshelf" class="idlEnumItem">highshelf</a>",
+    "<a href="#idl-def-BiquadFilterType.peaking" class="idlEnumItem">peaking</a>",
+    "<a href="#idl-def-BiquadFilterType.notch" class="idlEnumItem">notch</a>",
+    "<a href="#idl-def-BiquadFilterType.allpass" class="idlEnumItem">allpass</a>"
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-BiquadFilterNode">interface <span class="idlInterfaceID">BiquadFilterNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-BiquadFilterType"><code>BiquadFilterType</code></a></span> <span class="idlAttrName"><a href="#widl-BiquadFilterNode-type">type</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>       <span class="idlAttrName"><a href="#widl-BiquadFilterNode-frequency">frequency</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>       <span class="idlAttrName"><a href="#widl-BiquadFilterNode-detune">detune</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>       <span class="idlAttrName"><a href="#widl-BiquadFilterNode-Q">Q</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>       <span class="idlAttrName"><a href="#widl-BiquadFilterNode-gain">gain</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-BiquadFilterNode-getFrequencyResponse-void-Float32Array-frequencyHz-Float32Array-magResponse-Float32Array-phaseResponse">getFrequencyResponse</a></span> (<span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">frequencyHz</span></span>, <span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">magResponse</span></span>, <span class="idlParam"><span class="idlParamType">Float32Array</span> <span class="idlParamName">phaseResponse</span></span>);</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-WaveShaperNode"><span class="idlEnum" id="idl-def-OverSampleType">enum <span class="idlEnumID">OverSampleType</span> {
+    "<a href="#idl-def-OverSampleType.none" class="idlEnumItem">none</a>",
+    "<a href="#idl-def-OverSampleType.x2x" class="idlEnumItem">2x</a>",
+    "<a href="#idl-def-OverSampleType.x4x" class="idlEnumItem">4x</a>"
+};</span><br><br>interface <span class="idlInterfaceID">WaveShaperNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType">Float32Array?</span>  <span class="idlAttrName"><a href="#widl-WaveShaperNode-curve">curve</a></span>;</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-OverSampleType"><code>OverSampleType</code></a></span> <span class="idlAttrName"><a href="#widl-WaveShaperNode-oversample">oversample</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlEnum" id="idl-def-OscillatorType">enum <span class="idlEnumID">OscillatorType</span> {
+    "<a href="#idl-def-OscillatorType.sine" class="idlEnumItem">sine</a>",
+    "<a href="#idl-def-OscillatorType.square" class="idlEnumItem">square</a>",
+    "<a href="#idl-def-OscillatorType.sawtooth" class="idlEnumItem">sawtooth</a>",
+    "<a href="#idl-def-OscillatorType.triangle" class="idlEnumItem">triangle</a>",
+    "<a href="#idl-def-OscillatorType.custom" class="idlEnumItem">custom</a>"
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-OscillatorNode">interface <span class="idlInterfaceID">OscillatorNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">                attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-OscillatorType"><code>OscillatorType</code></a></span> <span class="idlAttrName"><a href="#widl-OscillatorNode-type">type</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>     <span class="idlAttrName"><a href="#widl-OscillatorNode-frequency">frequency</a></span>;</span>
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType"><a class="idlType" href="#idl-def-AudioParam"><code>AudioParam</code></a></span>     <span class="idlAttrName"><a href="#widl-OscillatorNode-detune">detune</a></span>;</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-OscillatorNode-start-void-double-when">start</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">when</span> = <span class="idlDefaultValue">0</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-OscillatorNode-stop-void-double-when">stop</a></span> (<span class="idlParam"><span class="idlParamType">double</span> <span class="idlParamName">when</span> = <span class="idlDefaultValue">0</span></span>);</span>
+<span class="idlMethod">    <span class="idlMethType">void</span> <span class="idlMethName"><a href="#widl-OscillatorNode-setPeriodicWave-void-PeriodicWave-periodicWave">setPeriodicWave</a></span> (<span class="idlParam"><span class="idlParamType"><a class="idlType" href="#idl-def-PeriodicWave"><code>PeriodicWave</code></a></span> <span class="idlParamName">periodicWave</span></span>);</span>
+<span class="idlAttribute">                attribute <span class="idlAttrType">EventHandler</span>   <span class="idlAttrName"><a href="#widl-OscillatorNode-onended">onended</a></span>;</span>
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-PeriodicWave">interface <span class="idlInterfaceID">PeriodicWave</span> {
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-MediaStreamAudioSourceNode">interface <span class="idlInterfaceID">MediaStreamAudioSourceNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+};</span></pre><pre class="idl"><span class="idlInterface" id="idl-def-MediaStreamAudioDestinationNode">interface <span class="idlInterfaceID">MediaStreamAudioDestinationNode</span> : <span class="idlSuperclass"><a class="idlType" href="#idl-def-AudioNode"><code>AudioNode</code></a></span> {
+<span class="idlAttribute">    readonly    attribute <span class="idlAttrType">MediaStream</span> <span class="idlAttrName"><a href="#widl-MediaStreamAudioDestinationNode-stream">stream</a></span>;</span>
+};</span></pre></div></body></html>
