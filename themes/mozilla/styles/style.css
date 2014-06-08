@@ -284,7 +284,7 @@ blockquote .quotesource {
 
 /* Cover */
 .slide.cover section {
-	background:#000;
+	background:url(../images/bg-sandstone-2.png);
 	overflow:hidden;
 	}
 	.slide.cover section:before {
@@ -602,8 +602,7 @@ small.byline{
 	color:inherit;
 	}
 .cover h2, .cover a {
-	color:#fff;
-	background: rgba(0,0,0,0.6);
+	color:#000;
 	padding: 5px 10px;
 	border-bottom: none;
 	text-decoration: none;
