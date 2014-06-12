@@ -1,4 +1,12 @@
 
+
+@font-face {
+    font-family: 'FiraSans';
+    src: url('../fonts/FiraSans-Medium.otf');
+    font-weight: normal;
+    font-style: normal;
+
+}
 @font-face {
     font-family: 'OpenSansLight';
     src: url('../fonts/OpenSans-Light-webfont.eot');

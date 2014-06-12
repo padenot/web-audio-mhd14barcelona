@@ -183,12 +183,14 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
         <h2>Feature Overview</h2>
       </header>
       <ul>
-        <li> <strong>Asynchronous</strong> compressed audio decoding to <code>ArrayBuffers</code> </li>
+        <li> <strong>Asynchronous</strong> compressed audio decoding to
+        <code>ArrayBuffers</code> (formats: same as <code>&lt;audio&gt;</code>) </li>
         <li><strong>Precise</strong> timing for sample playback </li>
         <li> Arbitrary audio <strong>routing/mixing</strong> </li>
         <li> <strong>Effect</strong> transition, scheduling (automation)</li>
-        <li> Ability to <strong>analyse</strong> audio </li>
-        <li> Integration with the <strong>web platform</strong> </li>
+        <li> Ability to <strong>analyse</strong> audio (e.g. FFT) </li>
+        <li> Integration with the <strong>web platform</strong>
+        (<code>MediaRecorder</code>, WebRTC, <code>&lt;audio&gt;</code>) </li>
         <li> <strong>Low-latency</strong> playback </li>
       </ul>
       <footer class="notes">
@@ -201,16 +203,17 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
     <header>
       <h2>Internal Processing model</h2>
     </header>
-    <ul>
+    <ul style="font-size: 0.95em">
       <li> Can't share <code>AudioNode</code>s between <code>AudioContext</code> </li>
       <li> Can share <code>AudioBuffer</code>s, though </li>
-      <li> Message passing </li>
-      <li> Dedicated thread for processing </li>
-      <li> Main thread for control (shared with everything else) </li>
-      <li> Float32 everywhere </li>
-      <li> Block processing (128 sample-frames) </li>
-      <li> Feedback loops allowed (iff at least one DelayNode in the cycle) </li>
-      <li> Low latency (not low enough <em>yet</em> for Firefox but coming) </li>
+      <li> <strong>Dedicated thread</strong> for audio processing </li>
+      <li> Main thread for <strong>control</strong> (shared with everything else: &lt;canvas&gt;,
+      WegGL, etc.) </li>
+      <li> <strong>Message passing</strong> (between main thread and audio thread): no locking </li>
+      <li> <strong>Float32</strong> everywhere </li>
+      <li> <strong>Block</strong> processing (128 sample-frames) </li>
+      <li> <strong>Feedback loops</strong> allowed (iff at least one <code>DelayNode</code> in the cycle) </li>
+      <li> <strong>Low latency</strong> (not low enough <em>yet</em> for Firefox but coming) </li>
     </ul>
     </section>
   </div></div>
@@ -230,9 +233,11 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       <h2>Threads</h2>
     </header>
     <ul>
-      <li> Message passing for everything to avoid blocking the audio thread </li>
-      <li> You <em>schedule</em> things to happen, they do not happen immediatly </li>
-      <li> You can't get values from the audio thread (they would be meaningless, because late)</li>
+      <li> Message passing for everything to <strong>avoid blocking</strong> the audio thread
+      (that would result in hearable glitches) </li>
+      <li> You <strong>schedule</strong> things to happen on the audio thread, they do
+      not happen immediatly, but at the next audio callback </li>
+      <li> You <strong>can't retrieve values</strong> from the audio thread (they would be meaningless, because late)</li>
     </ul>
     </section>
   </div></div>
@@ -244,10 +249,11 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
     </header>
     <p>
     <ul>
-      <li> <strong>Input nodes</strong>: produce audio </li>
-      <li> <strong>Output nodes</strong>: receive audio </li>
+      <li> <strong>Input nodes</strong>: produce audio -- audio sources </li>
+      <li> <strong>Output nodes</strong>: receive audio -- audio sinks </li>
       <li><strong>Processing nodes</strong>: process incoming audio, output processed signal</li>
     </ul>
+    <img src="pictures/nodes-simple.svg" style="height: 30%; witdth:100%">
     </p>
     </section>
   </div></div>
@@ -257,16 +263,19 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       <header>
         <h2>Source Nodes</h2>
       </header>
-      Those nodes <em>output</em> sound, to be processed by other nodes.
       <ul>
-        <li> <code>MediaStreamAudioSourceNode</code>, from WebRTC, <code>getUserMedia</code>, etc.</li>
-        <li><code>AudioBufferSourceNode</code>, "sample player"</li>
-        <li><code>OscillatorNode</code>, sine, square, saw, triangle, custom</li>
+        <li><code>AudioBufferSourceNode</code>, sample player, plays
+        <code>AudioBuffer</code>. One shot, but cheap to create</li>
+        <li><code>OscillatorNode</code>, sine, square, saw, triangle, custom
+        from FFT. One shot (use a <code>GainNode</code>)</li>
         <li><code>ScriptProcessorNode</code> (with no input) to generate
         arbitrary waveforms using JavaScript <strong style="color: red">(but
           beware, it's broken!)</strong></li>
-        <li><code>MediaElementAudioSourceNode</code> to pipe the audio from <code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code> in Web Audio</li>
-      </ul>
+        <li><code>MediaElementAudioSourceNode</code> to pipe the audio from
+        <code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code> in an
+        <code>AudioContext</code></li>
+        <li> <code>MediaStreamAudioSourceNode</code>, from
+        <code>PeerConnection</code>, <code>getUserMedia</code>.</li> </ul>
 
       <footer class="notes">
       </footer>
@@ -278,14 +287,19 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       <header>
         <h2>Processing Nodes</h2>
       </header>
-      Take an input, tweaks it somehow, and outputs it.
         <ul>
-          <li><code>GainNode</code>: Change the volume</li>
-          <li><code>DelayNode</code>: Delays the input, in time</li>
+          <li><code>GainNode</code>: Change the volume </li>
+          <li><code>DelayNode</code>: Delays the input, in time. Needed for
+          cycles. </li>
           <li><code>ScriptProcessorNode</code> (with both input and output
           connected): arbitrary processing <strong style="color: red">(but
           beware, it's broken)</strong></li>
-          <li><code>PannerNode</code>: Position a source and a listener in 3D and get the sound <em>panned</em> accordingly</li>
+          <li><code>PannerNode</code>: Position a source and a listener in 3D
+          and get the sound <em>panned</em> accordingly</li>
+          <li><code>Channel{Splitter,Merger}Node</code>: Merge or Split
+          multi-channel audio from/to mono</li>
+          <li><code>ConvolverNode</code>: Perform one-dimensional convolution
+          between an <code>AudioBuffer</code> and the input (e.g. reverb)</li>
         </ul>
 
       <footer class="notes">
@@ -299,11 +313,11 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
         <h2>Processing Nodes (moar)</h2>
       </header>
         <ul>
-          <li><code>Channel{Splitter,Merger}Node</code>: Merge or Split multi-channel audio</li>
-          <li><code>ConvolverNode</code>: Perform one-dimensional convolution (e.g. church-like reverb)</li>
-          <li><code>WaveShaperNode</code>: Non-linear wave shaping (e.g. guitar distortion) </li>
-          <li><code>BiquadFilter</code>: low-pass, high-pass, etc. (e.g.  graphical equalizer)</li>
-          <li><code>DynamicsCompressorNode</code>: harmonizes audio levels</li>
+          <li><code>WaveShaperNode</code>: Non-linear wave shaping (e.g. guitar
+          distortion) </li>
+          <li><code>BiquadFilter</code>: low-pass, high-pass, band-pass,
+          all-pass, etc.</li>
+          <li><code>DynamicsCompressorNode</code>: adjust audio dynamics </li>
         </ul>
       <footer class="notes">
       </footer>
@@ -317,10 +331,11 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       </header>
         <ul>
           <li><code>MediaStreamAudioDestinationNode</code>: Outputs to a
-          <code>MediaStream</code>(send to a WebRTC <code>PeerConnection</code>, a
+          <code>MediaStream</code>(send to e.g. a WebRTC <code>PeerConnection</code>
+          or a
           <code>MediaRecorder</code> to encode)</li>
-          <li><code>AudioDestinationNode</code>: Outputs to speakers</li>
-          <li><code>ScriptProcessorNode</code>: arbitrary processing on input audio</li>
+          <li><code>AudioDestinationNode</code>: Outputs to speakers/headphones </li>
+          <li><code>ScriptProcessorNode</code>: arbitrary processing on input audio </li>
           <li><code>AnalyserNode</code>: Get time-domain or frequency-domain
           audio data, in <code>ArrayBuffer</code>s</li>
         </ul>
@@ -335,9 +350,9 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
         <h2>AudioParam for automation</h2>
       </header>
         <ul>
-          <li> Almost everything is an <code>AudioParam</code> </li>
+          <li> Almost every <code>AudioNode</code> parameter is an <code>AudioParam</code> </li>
           <li> Set directly: <code> g.gain.value = 0.5; </code> </li>
-          <li> Use automation
+          <li> Use <strong>automation curve</strong> functions:
             <ul style="font-size:0.6em">
              <li><code>g.gain.setValueAtTime(0.5, ctx.currentTime + 1.0); </code> </li>
              <li><code>g.gain.linearRampToValueAtTime(0.5, ct + 1.0);</code></li>
@@ -347,6 +362,7 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
              <li><code>g.gain.cancelScheduledValues (ct);</code></li>
             </ul>
           </li>
+          <li> De-ziperring </li>
         </ul>
       <footer class="notes">
       </footer>
@@ -356,19 +372,18 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
   <div id="lfo" class="slide"><div>
     <section>
       <header>
-        <h2>AudioParam + OscillatorNode = LFO</h2>
+        <h2>AudioParam + OscillatorNode = LFO automation</h2>
       </header>
         <ul>
           <pre>
-            <code> // A wobble effect </code>
-            <code> var osc = ctx.createOscillator(); </code>
-            <code> osc.frequency.value = 4; </code>
-            <code> var lpf = ctx.createBiquadFilter(); </code>
+            <code> var osc = ctx.createOscillator(); // default: sine </code>
+            <code> osc.frequency.value = 4; // Hz </code>
+            <code> var lpf = ctx.createBiquadFilter(); // default: low-pass </code>
             <code> var gain = ctx.createGain() </code>
-            <code> gain.gain.value = 1000; // 0Hz -&gt; 1000Hz </code>
-            <code> osc.connect(gain.gain); // osc -&gt; audioparam </code>
+            <code> gain.gain.value = 1000; // [0; 1.0] to [0; 1000] </code>
+            <code> osc.connect(gain.gain); // osc -&gt; AudioParam </code>
             <code> gain.connect(lpf.frequency); </code>
-            <code> // dubstep everywhere </code>
+            <code> // dubstep </code>
             <code> osc.start(0);</code>
           </pre>
         </ul>
@@ -388,6 +403,11 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
          href="http://jsbin.com/dufoqixu/10/embed?js,output">fancy jsbin</a>
          to play with the Web Audio API.
     </p>
+    <p>
+      Example code at the bottom of the "output" panel, a drum loop and a reverb
+      impulse are included, feel free to add your own files!
+    </p>
+    <p> (<strong>Fork it</strong> before using it, to keep your changes) </p>
     </section>
   </div></div>
 
@@ -401,22 +421,13 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
     <p>
     <ul>
       <li> The <code>ScriptProcessorNode</code> is <strong>broken</strong> by design </li>
-      <li> Sometimes Float32 are too memory-heavy </li>
-      <li> No FFT/IFFT exposed other than in the AnalyserNode </li>
+      <li> Sometimes Float32 are too memory-heavy (<code>OfflineAudioContext</code> trick to
+      same memory) </li>
+      <li> No FFT/IFFT exposed other than in the <code>AnalyserNode</code> </li>
       <li> Does not work (yet) in WebWorkers </li>
-      <li> No way to enqueue buffers and have them play </li>
+      <li> No way to enqueue buffers and have them play (but you have <code>MediaSource</code> for that) </li>
     </ul>
     </p>
-    </section>
-  </div></div>
-
-  <div id="devtool" class="oneline slide"><div>
-      <section>
-      <header>
-        <h2>
-          <a href=http://padenot.github.io/drumlab>Firefox Devtool</a>
-        </h2>
-      </header>
     </section>
   </div></div>
 
@@ -429,9 +440,19 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       </header>
       <ul>
         <li> <code>webkitAudioContext</code> vs. <code>AudioContext</code>
-        (<a href="https://github.com/cwilso/webkitAudioContext-MonkeyPatch">Monkeypatching library</a>)</li>
-        <li> Old vs. new names (<a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Porting_webkitAudioContext_code_to_standards_based_AudioContext">porting guide</a>) </li>
-        <li> Chrome about to drop the prefix (Safari won't) </li>
+        <li> Chrome dropped the prefix (in Canary or maybe release by now)
+        (Safari won't) (<a
+        href="https://github.com/cwilso/webkitAudioContext-MonkeyPatch">Monkeypatching
+      library</a>, for easy compatibility)</li>
+        <li> Old vs. new names (Our <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Porting_webkitAudioContext_code_to_standards_based_AudioContext">porting guide</a>) </li>
+        <li> Blink/Webkit do automatic de-zippering, Firefox doesn't (for now, it might change) </li>
+        <li> <code>MediaElementAudioSourceNode</code> output is silence when it is from
+        another server and CORS header is not there </li>
+        <li> Use <a
+        href="http://www.google.com/intl/en/chrome/browser/canary.html">Chrome
+      Canary</a> (Win/OSX only) or <a href="http://nightly.mozilla.org">Firefox
+    Nightly</a> (Win/Linux/OSX/Android/FxOS) to get the last features (Web MIDI in
+  Chrome !)</li>
       </ul>
     </section>
   </div></div>
@@ -445,8 +466,11 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       </header>
       <ul>
         <li> It still exists !</li>
-        <li> For when you don't care about perf/scheduling effects </li>
-        <li> For when you don't want to have the data in memory </li>
+        <li> It <strong>can</strong> play a <code>Blob</code> (from <code>IndexedDB</code>,
+        <code>XMLHttpRequest</code>, local file, <code>ArrayBuffer</code>) </li>
+        <li> For when you don't care about <strong>perf</strong>, <strong>scheduling effects</strong> </li>
+        <li> For when you don't want to have the <strong>data loaded in memory</strong> </li>
+        <li> Think about using <code>MediaElementAudioSourceNode</code>, best of both worlds!</li>
       </ul>
     </section>
   </div></div>
@@ -456,24 +480,39 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       <header>
         <h2>Cheat sheet</h2>
       </header>
-      <p>Cheat sheet for the hack day:
-        <a href="web-audio-api-cheatsheet.html">Here !</a>
+      <p>
+        Cheat sheet for the Music Hack Day: <a href="web-audio-api-cheatsheet.html">Here !</a>
       </p>
       <p>
         Don't be afraid to go read the <a
           href=http://webaudio.github.io/web-audi-api>spec</a>! (or to ask me
         question, I'll be around writing code)
       </p>
-        <footer>
-        <small>
-          (<a
-            href="https://gist.github.com/padenot/73ffe8e2f5e500f621fe">code</a> to generate the cheat sheet
-            from the spec
-          </a>
-        </small>)
-        </footer>
       <footer class="notes">
       </footer>
+    </section>
+  </div></div>
+
+  <div id="devtool" class="slide"><div>
+      <section>
+      <header>
+        <h2>
+          Firefox Web Audio Editor
+        </h2>
+      </header>
+        <p>
+          Open the devtools, cog icon, enable it, reload the page that has an
+          <code>AudioContext</code>.
+        </p>
+        <p>
+          In heavy development (Made by Jordan Santell (@<a
+            href="http://twitter.com/jsantell">jsantell</a>)), available in
+          Nightly builds.
+          <small style="font-size: 0.7em">
+            (The canvas editor can also be useful for the MHD)
+          </small>
+        </p>
+        <a href=http://padenot.github.io/drumlab>Possible demo page</a> (but any page should work, or that's a bug).
     </section>
   </div></div>
 
@@ -492,16 +531,18 @@ ac.decodeAudioData(ogg_arraybuffer, <span class=js-kw>function</span>(audiobuffe
       <header>
         <h2>Thanks</h2>
       </header>
-      <img src="pictures/w3-audio-logo.png" width="30%" class="right" alt="W3C AudioWG Logo">
-      <img src="pictures/firefox-oct-2013.png" width="30%" class="right" alt="Firefox Logo">
       <ul class="">
         <li><strong>Paul Adenot</strong></li>
-        <li><a href="mailto=padenot@mozilla.com">padenot@mozilla.com</a></li>
-        <li><a href="http://twitter.com/padenot">@padenot</a></li>
-        <li><a href="irc://irc.mozilla.org#media">#media on irc.mozilla.org</a> to complain about Gecko</li>
+        <li><a href="mailto=padenot@mozilla.com">padenot@mozilla.com</a>, emails welcome</li>
+        <li><a href="http://twitter.com/padenot">@padenot</a> on Twitter</li>
+        <li><a href="irc://irc.mozilla.org#media">#media on irc.mozilla.org</a>
+        to complain about Firefox's implementation (also padenot there, Paris timezone)</li>
+        <li><a
+        href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Web%20Audio">bugzilla.mozilla.org</a>
+        to complain about Firefox's implementation, and <strong>actually get things fixed</strong></li>
         <li><a
           href="https://github.com/WebAudio/web-audio-api/issues">https://github.com/WebAudio/web-audio-api/issues
-          </a> to complain about the spec.</li>
+          </a> to complain about the spec (please do)</li>
         <li><strong>Slides</strong>: <a
           href="http://padenot.github.io/web-audio-mhd14barcelona">http://padenot.github.io/web-audio-mhd14barcelona</a></li>
       </ul>
